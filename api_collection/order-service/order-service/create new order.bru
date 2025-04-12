@@ -1,0 +1,25 @@
+meta {
+  name: create new order
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:5000/api/orders
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": 2,
+    "item": "test item 1234",
+    "quantity": 5
+  }
+}
+
+body:multipart-form {
+  userId: 1
+  item: test item
+  quantity: 5
+}
