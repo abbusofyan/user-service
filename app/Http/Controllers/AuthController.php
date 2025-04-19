@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -53,5 +54,34 @@ class AuthController extends Controller
     public function profile(Request $request)
     {
         return response()->json($request->user());
+    }
+
+    public function redirectToGoogle() {
+        return Socialite::driver('google')->stateless()->redirect();
+    }
+
+    public function handleGoogleCallback() {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->user();
+            $user = User::where('google_id', $googleUser->getId())->first();
+            if (!$user) {
+                $user = User::create([
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'google_id' => $googleUser->getId(),
+                    'password' => bcrypt($googleUser->getId())
+                ]);
+            }
+
+            $token = $user->createToken('Google-login')->plainTextToken;
+
+            return response()->json([
+                'user' => $user,
+                'token' => $token
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
     }
 }
